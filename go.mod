@@ -1,3 +1,3 @@
-module nn-go
+module nngo
 
 go 1.18
