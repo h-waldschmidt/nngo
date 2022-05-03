@@ -66,10 +66,20 @@ func (d *DenseLayer) forward(input mat.VecDense) mat.VecDense {
 	return *ans
 }
 
-func (d *DenseLayer) backward(outputGradient mat.VecDense, learning_rate float64) []float64 {
+func (d *DenseLayer) backward(outputGradient mat.VecDense, learning_rate float64) mat.Dense {
 	var weightsGradient *mat.Dense
 	transpose := &d.base.input
 	weightsGradient.Mul(&outputGradient, transpose.T())
 
-	return nil
+	weightsGradient.Scale(learning_rate, weightsGradient)
+	d.weights.Sub(&d.weights, weightsGradient)
+
+	cacheOutputGradient := outputGradient
+	cacheOutputGradient.ScaleVec(learning_rate, &cacheOutputGradient)
+	d.bias.SubVec(&d.bias, &cacheOutputGradient)
+
+	// type assertion needed since T() returns mat.Matrix not mat.Dense
+	weightsTranspose := d.weights.T().(*mat.Dense)
+	weightsTranspose.Mul(weightsTranspose, &outputGradient)
+	return *weightsTranspose
 }
