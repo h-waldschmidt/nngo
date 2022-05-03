@@ -58,7 +58,7 @@ func NewDenseLayer(inputSize int, outputSize int) *DenseLayer {
 	return denseLayer
 }
 
-func (d DenseLayer) forward(input mat.VecDense) mat.VecDense {
+func (d *DenseLayer) forward(input mat.VecDense) mat.VecDense {
 	d.base.input = input
 	var ans *mat.VecDense
 	ans.MulVec(&d.weights, &input)
@@ -66,7 +66,10 @@ func (d DenseLayer) forward(input mat.VecDense) mat.VecDense {
 	return *ans
 }
 
-func (d DenseLayer) backward(outputGradient []float64, learning_rate float64) []float64 {
+func (d *DenseLayer) backward(outputGradient mat.VecDense, learning_rate float64) []float64 {
+	var weightsGradient *mat.Dense
+	transpose := &d.base.input
+	weightsGradient.Mul(&outputGradient, transpose.T())
 
 	return nil
 }
