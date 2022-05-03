@@ -1,6 +1,8 @@
 package neuralnet
 
 import (
+	"math/rand"
+
 	"gonum.org/v1/gonum/mat"
 )
 
@@ -22,14 +24,45 @@ type DenseLayer struct {
 }
 
 // constructor for DenseLayer
-func NewDenseLayer(inputSize int, outputSize int) DenseLayer {
+func NewDenseLayer(inputSize int, outputSize int) *DenseLayer {
+	if inputSize <= 0 || outputSize <= 0 {
+		panic("inputSize and outputSize must be greater than 0")
+	}
 
+	var denseLayer *DenseLayer
+
+	input := mat.NewVecDense(inputSize, make([]float64, inputSize))
+
+	for i := 0; i < inputSize; i++ {
+		input.SetVec(i, rand.NormFloat64())
+	}
+
+	denseLayer.base.input = *input
+
+	output := mat.NewVecDense(outputSize, make([]float64, outputSize))
+	bias := mat.NewVecDense(outputSize, make([]float64, outputSize))
+	weights := mat.NewDense(outputSize, inputSize, make([]float64, outputSize*inputSize))
+
+	for i := 0; i < outputSize; i++ {
+		output.SetVec(i, rand.NormFloat64())
+		bias.SetVec(i, rand.NormFloat64())
+		for j := 0; j < inputSize; j++ {
+			weights.Set(i, j, rand.NormFloat64())
+		}
+	}
+
+	denseLayer.base.output = *output
+	denseLayer.weights = *weights
+	denseLayer.bias = *bias
+
+	return denseLayer
 }
 
 func (d DenseLayer) forward(input mat.VecDense) mat.VecDense {
 	d.base.input = input
 	var ans *mat.VecDense
 	ans.MulVec(&d.weights, &input)
+	ans.AddVec(ans, &d.bias)
 	return *ans
 }
 
