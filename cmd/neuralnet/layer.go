@@ -12,24 +12,27 @@ type Layer interface {
 	backward(outputGradient []float64, learning_rate float64) []float64
 }
 
-type BaseLayer struct {
+type Base struct {
 	input  mat.VecDense
 	output mat.VecDense
 }
 
-type DenseLayer struct {
-	base    BaseLayer
+type Dense struct {
+	base    Base
 	weights mat.Dense
 	bias    mat.VecDense
 }
 
+type Activation struct {
+}
+
 // constructor for DenseLayer
-func NewDenseLayer(inputSize int, outputSize int) *DenseLayer {
+func NewDenseLayer(inputSize int, outputSize int) *Dense {
 	if inputSize <= 0 || outputSize <= 0 {
 		panic("inputSize and outputSize must be greater than 0")
 	}
 
-	var denseLayer *DenseLayer
+	var dense *Dense
 
 	input := mat.NewVecDense(inputSize, make([]float64, inputSize))
 
@@ -37,7 +40,7 @@ func NewDenseLayer(inputSize int, outputSize int) *DenseLayer {
 		input.SetVec(i, rand.NormFloat64())
 	}
 
-	denseLayer.base.input = *input
+	dense.base.input = *input
 
 	output := mat.NewVecDense(outputSize, make([]float64, outputSize))
 	bias := mat.NewVecDense(outputSize, make([]float64, outputSize))
@@ -58,7 +61,7 @@ func NewDenseLayer(inputSize int, outputSize int) *DenseLayer {
 	return denseLayer
 }
 
-func (d *DenseLayer) forward(input mat.VecDense) mat.VecDense {
+func (d *Dense) forward(input mat.VecDense) mat.VecDense {
 	d.base.input = input
 	var ans *mat.VecDense
 	ans.MulVec(&d.weights, &input)
@@ -66,7 +69,7 @@ func (d *DenseLayer) forward(input mat.VecDense) mat.VecDense {
 	return *ans
 }
 
-func (d *DenseLayer) backward(outputGradient mat.VecDense, learning_rate float64) mat.Dense {
+func (d *Dense) backward(outputGradient mat.VecDense, learning_rate float64) mat.Dense {
 	var weightsGradient *mat.Dense
 	transpose := &d.base.input
 	weightsGradient.Mul(&outputGradient, transpose.T())
