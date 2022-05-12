@@ -8,8 +8,8 @@ import (
 
 // default methods that have to be implemented by layers
 type Layer interface {
-	forward(input float64) float64
-	backward(outputGradient []float64, learning_rate float64) []float64
+	forward(input mat.VecDense) mat.VecDense
+	backward(outputGradient mat.VecDense, learningRate float64) mat.Dense
 }
 
 type Base struct {
@@ -66,16 +66,16 @@ func (d *Dense) forward(input mat.VecDense) mat.VecDense {
 	return *ans
 }
 
-func (d *Dense) backward(outputGradient mat.VecDense, learning_rate float64) mat.Dense {
+func (d *Dense) backward(outputGradient mat.VecDense, learningRate float64) mat.Dense {
 	var weightsGradient *mat.Dense
 	transpose := &d.base.input
 	weightsGradient.Mul(&outputGradient, transpose.T())
 
-	weightsGradient.Scale(learning_rate, weightsGradient)
+	weightsGradient.Scale(learningRate, weightsGradient)
 	d.weights.Sub(&d.weights, weightsGradient)
 
 	cacheOutputGradient := outputGradient
-	cacheOutputGradient.ScaleVec(learning_rate, &cacheOutputGradient)
+	cacheOutputGradient.ScaleVec(learningRate, &cacheOutputGradient)
 	d.bias.SubVec(&d.bias, &cacheOutputGradient)
 
 	// type assertion needed since T() returns mat.Matrix not mat.Dense
@@ -84,6 +84,11 @@ func (d *Dense) backward(outputGradient mat.VecDense, learning_rate float64) mat
 	return *weightsTranspose
 }
 
+type activationFunc func(float64)
 type Activation struct {
 	base Base
 }
+
+func (output *Activation) forward(input mat.VecDense) mat.VecDense {}
+
+func (output *Activation) backward(outputGradient mat.VecDense, learningRate float64) mat.Dense {}
