@@ -23,9 +23,6 @@ type Dense struct {
 	bias    mat.VecDense
 }
 
-type Activation struct {
-}
-
 // constructor for DenseLayer
 func NewDenseLayer(inputSize int, outputSize int) *Dense {
 	if inputSize <= 0 || outputSize <= 0 {
@@ -54,11 +51,11 @@ func NewDenseLayer(inputSize int, outputSize int) *Dense {
 		}
 	}
 
-	denseLayer.base.output = *output
-	denseLayer.weights = *weights
-	denseLayer.bias = *bias
+	dense.base.output = *output
+	dense.weights = *weights
+	dense.bias = *bias
 
-	return denseLayer
+	return dense
 }
 
 func (d *Dense) forward(input mat.VecDense) mat.VecDense {
@@ -85,4 +82,8 @@ func (d *Dense) backward(outputGradient mat.VecDense, learning_rate float64) mat
 	weightsTranspose := d.weights.T().(*mat.Dense)
 	weightsTranspose.Mul(weightsTranspose, &outputGradient)
 	return *weightsTranspose
+}
+
+type Activation struct {
+	base Base
 }
