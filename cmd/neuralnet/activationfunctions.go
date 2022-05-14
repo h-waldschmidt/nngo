@@ -22,3 +22,11 @@ func ReluDerivative(x float64) float64 {
 		return 1
 	}
 }
+
+func Tanh(x float64) float64 {
+	return math.Tanh(x)
+}
+
+func TanhDerivative(x float64) float64 {
+	return 1 - math.Pow(math.Tanh(x), 2)
+}
