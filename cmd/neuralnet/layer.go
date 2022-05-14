@@ -17,14 +17,22 @@ type Base struct {
 	output mat.VecDense
 }
 
+type activationFunc func(float64)
+type Activation struct {
+	base           Base
+	activationFunc activationFunc
+	activationDer  activationFunc
+}
 type Dense struct {
-	base    Base
-	weights mat.Dense
-	bias    mat.VecDense
+	base                 Base
+	weights              mat.Dense
+	bias                 mat.VecDense
+	activation           activationFunc
+	activationDerivative activationFunc
 }
 
 // constructor for DenseLayer
-func NewDenseLayer(inputSize int, outputSize int) *Dense {
+func NewDense(inputSize, outputSize int, activation, activationDerivative activationFunc) *Dense {
 	if inputSize <= 0 || outputSize <= 0 {
 		panic("inputSize and outputSize must be greater than 0")
 	}
@@ -83,12 +91,3 @@ func (d *Dense) backward(outputGradient mat.VecDense, learningRate float64) mat.
 	weightsTranspose.Mul(weightsTranspose, &outputGradient)
 	return *weightsTranspose
 }
-
-type activationFunc func(float64)
-type Activation struct {
-	base Base
-}
-
-func (output *Activation) forward(input mat.VecDense) mat.VecDense {}
-
-func (output *Activation) backward(outputGradient mat.VecDense, learningRate float64) mat.Dense {}
