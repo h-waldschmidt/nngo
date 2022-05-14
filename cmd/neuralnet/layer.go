@@ -17,7 +17,16 @@ type Base struct {
 	output mat.VecDense
 }
 
-type activationFunc func(float64)
+type activationFunc func(float64) float64
+
+func activationVector(vector mat.VecDense, activation activationFunc) mat.VecDense {
+	for i := 0; i < vector.Len(); i++ {
+		vector.SetVec(i, activation(vector.AtVec(i)))
+	}
+
+	return vector
+}
+
 type Activation struct {
 	base           Base
 	activationFunc activationFunc
@@ -38,6 +47,8 @@ func NewDense(inputSize, outputSize int, activation, activationDerivative activa
 	}
 
 	var dense *Dense
+	dense.activation = activation
+	dense.activationDerivative = activationDerivative
 
 	input := mat.NewVecDense(inputSize, make([]float64, inputSize))
 
@@ -71,10 +82,18 @@ func (d *Dense) forward(input mat.VecDense) mat.VecDense {
 	var ans *mat.VecDense
 	ans.MulVec(&d.weights, &input)
 	ans.AddVec(ans, &d.bias)
+
+	// apply activation function / activaation layer
+	cache := activationVector(*ans, d.activation)
+	ans = &cache
 	return *ans
 }
 
 func (d *Dense) backward(outputGradient mat.VecDense, learningRate float64) mat.Dense {
+	// update activation layer
+	cache := activationVector(d.base.input, d.activationDerivative)
+	outputGradient.MulVec(&outputGradient, &cache)
+
 	var weightsGradient *mat.Dense
 	transpose := &d.base.input
 	weightsGradient.Mul(&outputGradient, transpose.T())
