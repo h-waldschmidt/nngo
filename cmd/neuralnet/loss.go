@@ -6,7 +6,7 @@ import (
 	"gonum.org/v1/gonum/mat"
 )
 
-func mse(yTrue, yPred mat.VecDense) float64 {
+func Mse(yTrue, yPred mat.VecDense) float64 {
 	if yTrue.Len() != yPred.Len() {
 		panic("vectors need to have the same dimesions")
 	}
