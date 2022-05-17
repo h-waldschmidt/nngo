@@ -19,6 +19,16 @@ func Mse(yTrue, yPred mat.VecDense) float64 {
 	return sum / float64(yTrue.Len())
 }
 
+func MseDerivative(yTrue, yPred mat.VecDense) mat.VecDense {
+	if yTrue.Len() != yPred.Len() {
+		panic("vectors need to have the same dimesions")
+	}
+
+	yTrue.SubVec(&yPred, &yTrue)
+	yTrue.ScaleVec(2, &yTrue)
+	return yTrue
+}
+
 func Mae(yTrue, yPred mat.VecDense) float64 {
 	if yTrue.Len() != yPred.Len() {
 		panic("vectors need to have the same dimesions")
@@ -31,3 +41,5 @@ func Mae(yTrue, yPred mat.VecDense) float64 {
 
 	return sum / float64(yTrue.Len())
 }
+
+// TODO: add derivative of Mae
