@@ -8,7 +8,7 @@ import (
 
 func Mse(yTrue, yPred mat.VecDense) float64 {
 	if yTrue.Len() != yPred.Len() {
-		panic("vectors need to have the same dimesions")
+		panic("vectors need to have the same dimensions")
 	}
 
 	var sum float64
@@ -21,7 +21,7 @@ func Mse(yTrue, yPred mat.VecDense) float64 {
 
 func MseDerivative(yTrue, yPred mat.VecDense) mat.VecDense {
 	if yTrue.Len() != yPred.Len() {
-		panic("vectors need to have the same dimesions")
+		panic("vectors need to have the same dimensions")
 	}
 
 	yTrue.SubVec(&yPred, &yTrue)
@@ -31,7 +31,7 @@ func MseDerivative(yTrue, yPred mat.VecDense) mat.VecDense {
 
 func Mae(yTrue, yPred mat.VecDense) float64 {
 	if yTrue.Len() != yPred.Len() {
-		panic("vectors need to have the same dimesions")
+		panic("vectors need to have the same dimensions")
 	}
 
 	var sum float64
