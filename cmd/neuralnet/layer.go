@@ -1,6 +1,7 @@
 package neuralnet
 
 import (
+	"fmt"
 	"math/rand"
 
 	"gonum.org/v1/gonum/mat"
@@ -27,11 +28,6 @@ func activationVector(vector mat.VecDense, activation activationFunc) mat.VecDen
 	return vector
 }
 
-type Activation struct {
-	base           Base
-	activationFunc activationFunc
-	activationDer  activationFunc
-}
 type Dense struct {
 	base                 Base
 	weights              mat.Dense
@@ -41,9 +37,9 @@ type Dense struct {
 }
 
 // constructor for DenseLayer
-func NewDense(inputSize, outputSize int, activation, activationDerivative activationFunc) *Dense {
+func NewDense(inputSize, outputSize int, activation, activationDerivative activationFunc) (*Dense, error) {
 	if inputSize <= 0 || outputSize <= 0 {
-		panic("inputSize and outputSize must be greater than 0")
+		return nil, fmt.Errorf("inputSize and outputSize must be greater than 0")
 	}
 
 	var dense *Dense
@@ -74,7 +70,7 @@ func NewDense(inputSize, outputSize int, activation, activationDerivative activa
 	dense.weights = *weights
 	dense.bias = *bias
 
-	return dense
+	return dense, nil
 }
 
 func (d *Dense) forward(input mat.VecDense) mat.VecDense {
