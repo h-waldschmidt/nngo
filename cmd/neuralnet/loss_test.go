@@ -19,7 +19,7 @@ func TestMSENormal(t *testing.T) {
 		}
 	})
 
-	t.Run("Not_Zero", func(t *testing.T) {
+	t.Run("NotZero", func(t *testing.T) {
 		b := mat.NewVecDense(4, []float64{2, 3, 1, 4})
 
 		ans, err := Mse(*a, *b)
@@ -53,7 +53,7 @@ func TestMSEDerivativeNormal(t *testing.T) {
 		}
 	})
 
-	t.Run("Not_Zero", func(t *testing.T) {
+	t.Run("NotZero", func(t *testing.T) {
 		b := mat.NewVecDense(4, []float64{2, 3, 1, 4})
 		expected := mat.NewVecDense(4, []float64{2, 2, 4, 0})
 
@@ -72,6 +72,39 @@ func TestMSEDerivativeError(t *testing.T) {
 	ans, err := MseDerivative(*a, *b)
 
 	if cmp.Equal(expected, ans) || err == nil {
+		t.Error("Expected error")
+	}
+}
+
+func TestMAENormal(t *testing.T) {
+	a := mat.NewVecDense(4, []float64{1, 2, 3, 4})
+
+	t.Run("Zero", func(t *testing.T) {
+		b := mat.NewVecDense(4, []float64{1, 2, 3, 4})
+
+		ans, err := Mae(*a, *b)
+		if ans != 0 || err != nil {
+			t.Error("Expected zero")
+		}
+	})
+
+	t.Run("NotZero", func(t *testing.T) {
+		b := mat.NewVecDense(4, []float64{2, 3, 1, 4})
+
+		ans, err := Mae(*a, *b)
+		if ans != 1 || err != nil {
+			t.Errorf("Expected: %v, Got: %v", 1, ans)
+		}
+	})
+}
+
+func TestMAEError(t *testing.T) {
+	a := mat.NewVecDense(4, []float64{1, 2, 3, 4})
+	b := mat.NewVecDense(6, []float64{1, 2, 3, 4, 5, 6})
+
+	ans, err := Mae(*a, *b)
+
+	if ans != 0.0 || err == nil {
 		t.Error("Expected error")
 	}
 }
