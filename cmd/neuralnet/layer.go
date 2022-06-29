@@ -1,6 +1,8 @@
 package neuralnet
 
 import (
+	"fmt"
+	"log"
 	"math/rand"
 
 	"gonum.org/v1/gonum/mat"
@@ -27,11 +29,6 @@ func activationVector(vector mat.VecDense, activation activationFunc) mat.VecDen
 	return vector
 }
 
-type Activation struct {
-	base           Base
-	activationFunc activationFunc
-	activationDer  activationFunc
-}
 type Dense struct {
 	base                 Base
 	weights              mat.Dense
@@ -41,12 +38,12 @@ type Dense struct {
 }
 
 // constructor for DenseLayer
-func NewDense(inputSize, outputSize int, activation, activationDerivative activationFunc) *Dense {
+func NewDense(inputSize, outputSize int, activation, activationDerivative activationFunc) (*Dense, error) {
 	if inputSize <= 0 || outputSize <= 0 {
-		panic("inputSize and outputSize must be greater than 0")
+		return nil, fmt.Errorf("inputSize and outputSize must be greater than 0")
 	}
 
-	var dense *Dense
+	var dense Dense
 	dense.activation = activation
 	dense.activationDerivative = activationDerivative
 
@@ -74,39 +71,59 @@ func NewDense(inputSize, outputSize int, activation, activationDerivative activa
 	dense.weights = *weights
 	dense.bias = *bias
 
-	return dense
+	return &dense, nil
 }
 
 func (d *Dense) forward(input mat.VecDense) mat.VecDense {
 	d.base.input = input
-	var ans *mat.VecDense
+	var ans mat.VecDense
 	ans.MulVec(&d.weights, &input)
-	ans.AddVec(ans, &d.bias)
+	ans.AddVec(&ans, &d.bias)
+
+	ansCache := ans
+	d.base.output = ansCache
 
 	// apply activation function / activaation layer
-	cache := activationVector(*ans, d.activation)
-	ans = &cache
-	return *ans
+	cache := activationVector(ans, d.activation)
+	ans = cache
+	return ans
 }
 
 func (d *Dense) backward(outputGradient mat.VecDense, learningRate float64) mat.Dense {
+	var err error
 	// update activation layer
-	cache := activationVector(d.base.input, d.activationDerivative)
-	outputGradient.MulVec(&outputGradient, &cache)
+	cache := activationVector(d.base.output, d.activationDerivative)
+	outputGradient, err = componentWise(&outputGradient, &cache)
+	if err != nil {
+		log.Fatal(err)
+	}
 
-	var weightsGradient *mat.Dense
+	var weightsGradient mat.Dense
 	transpose := &d.base.input
 	weightsGradient.Mul(&outputGradient, transpose.T())
 
-	weightsGradient.Scale(learningRate, weightsGradient)
-	d.weights.Sub(&d.weights, weightsGradient)
+	weightsTranspose := d.weights
+	weightsGradient.Scale(learningRate, &weightsGradient)
+	d.weights.Sub(&d.weights, &weightsGradient)
 
 	cacheOutputGradient := outputGradient
 	cacheOutputGradient.ScaleVec(learningRate, &cacheOutputGradient)
 	d.bias.SubVec(&d.bias, &cacheOutputGradient)
 
 	// type assertion needed since T() returns mat.Matrix not mat.Dense
-	weightsTranspose := d.weights.T().(*mat.Dense)
-	weightsTranspose.Mul(weightsTranspose, &outputGradient)
-	return *weightsTranspose
+	var empty mat.Dense
+	empty.Mul(weightsTranspose.T(), &outputGradient)
+	return weightsTranspose
+}
+
+func componentWise(a, b *mat.VecDense) (mat.VecDense, error) {
+	var ans mat.VecDense
+	if a.Len() != b.Len() {
+		return ans, fmt.Errorf("vectors need to have the same length")
+	}
+	ans = *a
+	for i := 0; i < a.Len(); i++ {
+		ans.SetVec(i, a.AtVec(i)*b.AtVec(i))
+	}
+	return ans, nil
 }
