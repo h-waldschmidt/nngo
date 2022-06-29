@@ -111,7 +111,8 @@ func (d *Dense) backward(outputGradient mat.VecDense, learningRate float64) mat.
 	d.bias.SubVec(&d.bias, &cacheOutputGradient)
 
 	// type assertion needed since T() returns mat.Matrix not mat.Dense
-	weightsTranspose.Mul(weightsTranspose.T(), &outputGradient)
+	var empty mat.Dense
+	empty.Mul(weightsTranspose.T(), &outputGradient)
 	return weightsTranspose
 }
 
