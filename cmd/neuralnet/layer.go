@@ -8,19 +8,23 @@ import (
 	"gonum.org/v1/gonum/mat"
 )
 
-// default methods that have to be implemented by layers
+// default methods that have to be implemented by each layer
+// a layer needs an forward and backward propagation method
 type Layer interface {
 	forward(input mat.VecDense) mat.VecDense
 	backward(outputGradient mat.VecDense, learningRate float64) mat.Dense
 }
 
+// basic layer which consists of input and output vector
 type Base struct {
 	input  mat.VecDense
 	output mat.VecDense
 }
 
+// activationFunc is a function that takes a float as input and has float as output
 type activationFunc func(float64) float64
 
+// applies the given activation function on each element of the vector
 func activationVector(vector mat.VecDense, activation activationFunc) mat.VecDense {
 	for i := 0; i < vector.Len(); i++ {
 		vector.SetVec(i, activation(vector.AtVec(i)))
@@ -29,6 +33,8 @@ func activationVector(vector mat.VecDense, activation activationFunc) mat.VecDen
 	return vector
 }
 
+// Dense layer consists of a base layer with a weight matrix, bias vector and
+// an activation function with its derivative
 type Dense struct {
 	base                 Base
 	weights              mat.Dense
@@ -38,6 +44,8 @@ type Dense struct {
 }
 
 // constructor for DenseLayer
+// creates a new dense layer with random values for the vectors and matrices with the given data
+// inputSize and outputSize need to be positive
 func NewDense(inputSize, outputSize int, activation, activationDerivative activationFunc) (*Dense, error) {
 	if inputSize <= 0 || outputSize <= 0 {
 		return nil, fmt.Errorf("inputSize and outputSize must be greater than 0")
@@ -74,6 +82,8 @@ func NewDense(inputSize, outputSize int, activation, activationDerivative activa
 	return &dense, nil
 }
 
+// forward propagation with the following formula:
+// ans = activationFunc(weights * input + bias)
 func (d *Dense) forward(input mat.VecDense) mat.VecDense {
 	d.base.input = input
 	var ans mat.VecDense
@@ -89,6 +99,8 @@ func (d *Dense) forward(input mat.VecDense) mat.VecDense {
 	return ans
 }
 
+// backward propagation by using gradient descent
+// nice explanation can be found here: https://www.youtube.com/watch?v=Ilg3gGewQ5U
 func (d *Dense) backward(outputGradient mat.VecDense, learningRate float64) mat.Dense {
 	var err error
 	// update activation layer
