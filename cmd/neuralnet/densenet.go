@@ -17,11 +17,11 @@ type SplitSet struct {
 
 func (set *CompleteSet) splitDataSet() (SplitSet, error) {}
 
-type DenseNeuralNet struct {
+type DenseNet struct {
 	layers []Dense
 	cost   costFunc
 }
 
-func (dense *DenseNeuralNet) train() {}
+func (dense *DenseNet) train() {}
 
-func (dense *DenseNeuralNet) evaluate() {}
+func (dense *DenseNet) evaluate() {}
