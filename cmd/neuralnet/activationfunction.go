@@ -2,6 +2,9 @@ package neuralnet
 
 import "math"
 
+// activationFunc is a function that takes a float as input and has float as output
+type activationFunc func(float64) float64
+
 func Sigmoid(x float64) float64 {
 	return 1 / (1 + math.Exp(-x))
 }

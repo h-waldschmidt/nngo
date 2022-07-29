@@ -21,9 +21,6 @@ type Base struct {
 	output mat.VecDense
 }
 
-// activationFunc is a function that takes a float as input and has float as output
-type activationFunc func(float64) float64
-
 // applies the given activation function on each element of the vector
 func activationVector(vector mat.VecDense, activation activationFunc) mat.VecDense {
 	for i := 0; i < vector.Len(); i++ {
