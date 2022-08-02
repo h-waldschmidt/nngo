@@ -15,15 +15,20 @@ type SplitSet struct {
 	testData  [][]float64
 }
 
-func (set *CompleteSet) splitDataSet() (SplitSet, error) {}
+func (set *CompleteSet) splitDataSet() (SplitSet, error) {
+	var splitSet SplitSet
 
-type DenseNet struct {
-	layers []Dense
-	cost   costFunc
+	return splitSet, nil
 }
 
-func (dense *DenseNet) predict() {}
+type Network struct {
+	layers             []Dense
+	loss               lossFunc
+	lossFuncDerivative lossFuncDerivative
+}
 
-func (dense *DenseNet) train() {}
+func (dense *Network) predict() {}
 
-func (dense *DenseNet) evaluate() {}
+func (dense *Network) train() {}
+
+func (dense *Network) evaluate() {}
