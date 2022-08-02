@@ -1,4 +1,4 @@
-package neuralnet
+package neural
 
 // the used data consists of float vectors
 // this achieves maximum flexibility
@@ -21,6 +21,8 @@ type DenseNet struct {
 	layers []Dense
 	cost   costFunc
 }
+
+func (dense *DenseNet) predict() {}
 
 func (dense *DenseNet) train() {}
 
