@@ -7,6 +7,10 @@ import (
 	"gonum.org/v1/gonum/mat"
 )
 
+type lossFunc func(yTrue, yPred mat.VecDense) (float64, error)
+
+type lossFuncDerivative func(yTrue, yPred mat.VecDense) (mat.VecDense, error)
+
 func Mse(yTrue, yPred mat.VecDense) (float64, error) {
 	if yTrue.Len() != yPred.Len() {
 		return 0.0, fmt.Errorf("vectors need to have the same dimensions")
