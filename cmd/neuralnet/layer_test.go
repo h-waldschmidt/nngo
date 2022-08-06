@@ -7,7 +7,7 @@ import (
 )
 
 func TestNewDenseNormal(t *testing.T) {
-	dense, err := NewDense(4, 2, Sigmoid, SigmoidDerivative)
+	dense, err := NewDense(4, 2, 0)
 
 	if err != nil {
 		t.Errorf("Didn't expect this error: %v", err)
@@ -33,14 +33,14 @@ func TestNewDenseNormal(t *testing.T) {
 }
 
 func TestNewDenseError(t *testing.T) {
-	dense, err := NewDense(-1, 2, Sigmoid, SigmoidDerivative)
+	dense, err := NewDense(-1, 2, 0)
 	if dense != nil || err == nil {
 		t.Error("There should be an error")
 	}
 }
 
 func TestForwardNormal(t *testing.T) {
-	dense, err := NewDense(4, 2, Sigmoid, SigmoidDerivative)
+	dense, err := NewDense(4, 2, 0)
 
 	if err != nil {
 		t.Errorf("Didn't expect this error: %v", err)
@@ -58,7 +58,7 @@ func TestForwardNormal(t *testing.T) {
 }
 
 func TestBackwardNormal(t *testing.T) {
-	dense, err := NewDense(4, 2, Sigmoid, SigmoidDerivative)
+	dense, err := NewDense(4, 2, 0)
 
 	if err != nil {
 		t.Errorf("Didn't expect this error: %v", err)

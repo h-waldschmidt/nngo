@@ -43,14 +43,19 @@ type Dense struct {
 // constructor for DenseLayer
 // creates a new dense layer with random values for the vectors and matrices with the given data
 // inputSize and outputSize need to be positive
-func NewDense(inputSize, outputSize int, activation, activationDerivative activationFunc) (*Dense, error) {
+func NewDense(inputSize, outputSize, activationSpecs int) (*Dense, error) {
 	if inputSize <= 0 || outputSize <= 0 {
 		return nil, fmt.Errorf("inputSize and outputSize must be greater than 0")
 	}
 
+	funcTuple, err := getActivationTuple(activationSpecs)
+	if err != nil {
+		return nil, err
+	}
+
 	var dense Dense
-	dense.activation = activation
-	dense.activationDerivative = activationDerivative
+	dense.activation = funcTuple.activation
+	dense.activationDerivative = funcTuple.activationDerivative
 
 	input := mat.NewVecDense(inputSize, make([]float64, inputSize))
 
