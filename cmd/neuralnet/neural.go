@@ -14,6 +14,7 @@ import (
 //
 // each index of the data corresponds to the same label index in the labels data
 // labels are saved as vectors for easier access during the training process
+// labels row size should match the output size of the output layer
 //
 // you can read the complete dataset and then later convert it into splitSet with splitDataSet()
 type Set struct {
@@ -29,26 +30,82 @@ type SplitSet struct {
 
 // converts data vectors into a matrix
 // each subslice of the data slice should represent a vector
-func NewSet(data [][]float64, labels []float64, outputSize int) *Set {
-	var set *Set
+// the size of each label vector should match the output size of the output layer
+func NewSet(data, labels [][]float64) (*Set, error) {
+	if len(data) != len(labels) {
+		return nil, fmt.Errorf("size of data and labels should match")
+	}
 
-	return set
+	// transform data and matrix into matrices
+	dataMatrix := mat.NewDense(len(data[0]), len(data), nil)
+	labelMatrix := mat.NewDense(len(labels[0]), len(labels), nil)
+
+	for i := range data {
+		dataMatrix.SetCol(i, data[i])
+		labelMatrix.SetCol(i, labels[i])
+	}
+
+	set := Set{*dataMatrix, *labelMatrix}
+	return &set, nil
 }
 
 // converts data vectors into a matrix
 // each subslice of the data slice should represent a vector
-func NewSplitSet(testData, trainData [][]float64, testLabels, trainLabels []float64, outputSize int) *SplitSet {
-	var splitSet *SplitSet
+// the size of each label vector should match the output size of the output layer
+func NewSplitSet(testData, trainData, testLabels, trainLabels [][]float64) (*SplitSet, error) {
+	if len(testData) != len(testLabels) {
+		return nil, fmt.Errorf("size of test data and test labels should match")
+	}
+	if len(trainData) != len(trainLabels) {
+		return nil, fmt.Errorf("size of train data and train labels should match")
+	}
 
-	return splitSet
+	// transform test data and labels into matrices
+	testDataMatrix := mat.NewDense(len(testData[0]), len(testData), nil)
+	testLabelMatrix := mat.NewDense(len(testLabels[0]), len(testLabels), nil)
+
+	for i := range testData {
+		testDataMatrix.SetCol(i, testData[i])
+		testLabelMatrix.SetCol(i, testLabels[i])
+	}
+
+	// transform train data and labels into matrices
+	trainDataMatrix := mat.NewDense(len(trainData[0]), len(trainData), nil)
+	trainLabelMatrix := mat.NewDense(len(trainLabels[0]), len(trainLabels), nil)
+
+	for i := range trainData {
+		trainDataMatrix.SetCol(i, trainData[i])
+		trainLabelMatrix.SetCol(i, trainLabels[i])
+	}
+	splitSet := SplitSet{Set{*trainDataMatrix, *trainLabelMatrix}, Set{*testDataMatrix, *testLabelMatrix}}
+
+	return &splitSet, nil
 }
 
 // converts data vectors into a matrix
 // each subslice of the data slice should represent a vector
-func newSplitSet(data [][]float64, labels []float64, outputSize int, splitRatio float64) *SplitSet {
-	var splitSet *SplitSet
+// the size of each label vector should match the output size of the output layer
+func newSplitSet(data, labels [][]float64, splitRatio float64) (*SplitSet, error) {
+	if len(data) != len(labels) {
+		return nil, fmt.Errorf("size of data and labels should match")
+	}
 
-	return splitSet
+	// transform data and matrix into matrices
+	dataMatrix := mat.NewDense(len(data[0]), len(data), nil)
+	labelMatrix := mat.NewDense(len(labels[0]), len(labels), nil)
+
+	for i := range data {
+		dataMatrix.SetCol(i, data[i])
+		labelMatrix.SetCol(i, labels[i])
+	}
+
+	set := Set{*dataMatrix, *labelMatrix}
+	splitSet, err := set.splitDataSet(splitRatio)
+	if err != nil {
+		return nil, err
+	}
+
+	return &splitSet, nil
 }
 
 // splits the data and label set into a training and test set
