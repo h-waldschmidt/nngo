@@ -115,30 +115,60 @@ func TestNewSplitSet(t *testing.T) {
 }
 
 func TestNewSplitSetError(t *testing.T) {
-	trainData := [][]float64{
-		{1, 1, -4},
-		{0, -2, 0},
-		{0, 3, 0},
-	}
-	trainLabels := [][]float64{
-		{0, 1},
-		{1, 0},
-	}
-	testData := [][]float64{
-		{1, 1, -4},
-		{0, -2, 0},
-		{0, 3, 0},
-	}
-	testLabels := [][]float64{
-		{0, 1},
-		{1, 0},
-	}
+	t.Run("test mismatch", func(t *testing.T) {
+		trainData := [][]float64{
+			{1, 1, -4},
+			{0, -2, 0},
+			{0, 3, 0},
+		}
+		trainLabels := [][]float64{
+			{0, 1},
+			{1, 0},
+		}
+		testData := [][]float64{
+			{1, 1, -4},
+			{0, -2, 0},
+			{0, 3, 0},
+		}
+		testLabels := [][]float64{
+			{0, 1},
+			{1, 0},
+		}
 
-	_, err := NewSplitSet(trainData, testData, trainLabels, testLabels)
+		_, err := NewSplitSet(trainData, testData, trainLabels, testLabels)
 
-	if err == nil {
-		t.Error("Expected error.")
-	}
+		if err == nil {
+			t.Error("Expected error.")
+		}
+	})
+
+	t.Run("train mismatch", func(t *testing.T) {
+		trainData := [][]float64{
+			{1, 1, -4},
+			{0, -2, 0},
+			{0, 3, 0},
+		}
+		trainLabels := [][]float64{
+			{0, 1},
+			{1, 0},
+			{1, 0},
+		}
+		testData := [][]float64{
+			{1, 1, -4},
+			{0, -2, 0},
+			{0, 3, 0},
+		}
+		testLabels := [][]float64{
+			{0, 1},
+			{1, 0},
+		}
+
+		_, err := NewSplitSet(trainData, testData, trainLabels, testLabels)
+
+		if err == nil {
+			t.Error("Expected error.")
+		}
+	})
 }
 
 func TestNewSpitSetAlt(t *testing.T) {
