@@ -86,7 +86,7 @@ func NewSplitSet(testData, trainData, testLabels, trainLabels [][]float64) (*Spl
 // converts data vectors into a matrix
 // each subslice of the data slice should represent a vector
 // the size of each label vector should match the output size of the output layer
-func newSplitSet(data, labels [][]float64, splitRatio float64) (*SplitSet, error) {
+func NewSplitSetAlt(data, labels [][]float64, splitRatio float64) (*SplitSet, error) {
 	if len(data) != len(labels) {
 		return nil, fmt.Errorf("size of data and labels should match")
 	}
