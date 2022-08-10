@@ -185,6 +185,10 @@ func NewNetwork(layerSpecs [][]int, lossSpecs int) *Network {
 func (dense *Network) predict(input mat.VecDense) mat.VecDense {
 	var prediction mat.VecDense
 
+	for _, layer := range dense.layers {
+		prediction = layer.forward(input)
+		input = prediction
+	}
 	return prediction
 }
 
