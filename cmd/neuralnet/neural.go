@@ -2,6 +2,7 @@ package neural
 
 import (
 	"fmt"
+	"math/rand"
 
 	"gonum.org/v1/gonum/mat"
 )
@@ -109,7 +110,7 @@ func newSplitSet(data, labels [][]float64, splitRatio float64) (*SplitSet, error
 }
 
 // splits the data and label set into a training and test set
-// splitRatio specifies the size of the test
+// splitRatio specifies the size of the test data
 // splitRatio should be between 0 and 1
 func (set *Set) splitDataSet(splitRatio float64) (SplitSet, error) {
 	var splitSet SplitSet
@@ -117,6 +118,51 @@ func (set *Set) splitDataSet(splitRatio float64) (SplitSet, error) {
 		return splitSet, fmt.Errorf("splitRatio should be a value between 0 and 1")
 	}
 
+	// shuffle data and labels
+	for i := 0; i < set.data.RawMatrix().Cols; i++ {
+		j := rand.Intn(i + 1)
+
+		// swap data
+		cache := mat.Col(nil, i, &set.data)
+		set.data.SetCol(i, mat.Col(nil, j, &set.data))
+		set.data.SetCol(j, cache)
+
+		// swap labels
+		cache = mat.Col(nil, i, &set.labels)
+		set.labels.SetCol(i, mat.Col(nil, j, &set.labels))
+		set.labels.SetCol(j, cache)
+	}
+
+	// take len(data)*splitRatio percent of the last elements as test data
+	splitIndex := set.data.RawMatrix().Cols - int(float64(set.data.RawMatrix().Cols)*splitRatio)
+	trainData := mat.NewDense(set.data.RawMatrix().Rows,
+		splitIndex,
+		nil,
+	)
+	trainLabels := mat.NewDense(set.labels.RawMatrix().Rows,
+		splitIndex,
+		nil,
+	)
+	testData := mat.NewDense(set.data.RawMatrix().Rows,
+		int(float64(set.data.RawMatrix().Cols)*splitRatio),
+		nil,
+	)
+	testLabels := mat.NewDense(set.labels.RawMatrix().Rows,
+		int(float64(set.data.RawMatrix().Cols)*splitRatio),
+		nil,
+	)
+
+	for i := 0; i < splitIndex; i++ {
+		trainData.SetCol(i, mat.Col(nil, i, &set.data))
+		trainLabels.SetCol(i, mat.Col(nil, i, &set.labels))
+	}
+
+	for i := splitIndex; i < set.data.RawMatrix().Cols; i++ {
+		testData.SetCol(i, mat.Col(nil, i, &set.data))
+		testLabels.SetCol(i, mat.Col(nil, i, &set.labels))
+	}
+
+	splitSet = SplitSet{Set{*trainData, *trainLabels}, Set{*testData, *testLabels}}
 	return splitSet, nil
 }
 
