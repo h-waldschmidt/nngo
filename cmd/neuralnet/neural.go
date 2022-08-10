@@ -2,6 +2,7 @@ package neural
 
 import (
 	"fmt"
+	"math"
 	"math/rand"
 
 	"gonum.org/v1/gonum/mat"
@@ -134,7 +135,7 @@ func (set *Set) splitDataSet(splitRatio float64) (SplitSet, error) {
 	}
 
 	// take len(data)*splitRatio percent of the last elements as test data
-	splitIndex := set.data.RawMatrix().Cols - int(float64(set.data.RawMatrix().Cols)*splitRatio)
+	splitIndex := set.data.RawMatrix().Cols - int(math.Ceil(float64(set.data.RawMatrix().Cols)*splitRatio))
 	trainData := mat.NewDense(set.data.RawMatrix().Rows,
 		splitIndex,
 		nil,
@@ -144,11 +145,11 @@ func (set *Set) splitDataSet(splitRatio float64) (SplitSet, error) {
 		nil,
 	)
 	testData := mat.NewDense(set.data.RawMatrix().Rows,
-		int(float64(set.data.RawMatrix().Cols)*splitRatio),
+		int(math.Ceil(float64(set.data.RawMatrix().Cols)*splitRatio)),
 		nil,
 	)
 	testLabels := mat.NewDense(set.labels.RawMatrix().Rows,
-		int(float64(set.data.RawMatrix().Cols)*splitRatio),
+		int(math.Ceil(float64(set.data.RawMatrix().Cols)*splitRatio)),
 		nil,
 	)
 
@@ -158,8 +159,8 @@ func (set *Set) splitDataSet(splitRatio float64) (SplitSet, error) {
 	}
 
 	for i := splitIndex; i < set.data.RawMatrix().Cols; i++ {
-		testData.SetCol(i, mat.Col(nil, i, &set.data))
-		testLabels.SetCol(i, mat.Col(nil, i, &set.labels))
+		testData.SetCol(i-splitIndex, mat.Col(nil, i, &set.data))
+		testLabels.SetCol(i-splitIndex, mat.Col(nil, i, &set.labels))
 	}
 
 	splitSet = SplitSet{Set{*trainData, *trainLabels}, Set{*testData, *testLabels}}
