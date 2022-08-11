@@ -16,8 +16,8 @@ const (
 
 // tuple of lossFunction and lossFunctionDerivative
 type lossTuple struct {
-	loss                 lossFunc
-	activationDerivative lossFuncDerivative
+	loss           lossFunc
+	lossDerivative lossFuncDerivative
 }
 
 // get function tuple based on specification number
