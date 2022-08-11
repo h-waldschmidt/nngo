@@ -189,10 +189,10 @@ func TestNewSpitSetAlt(t *testing.T) {
 		t.Errorf("Didn't expect error. Got: %v", err)
 	}
 
-	if set.train.data.RawMatrix().Cols != 2 ||
-		set.train.labels.RawMatrix().Cols != 2 ||
-		set.test.data.RawMatrix().Cols != 1 ||
-		set.test.labels.RawMatrix().Cols != 1 {
+	if set.Train.Data.RawMatrix().Cols != 2 ||
+		set.Train.Labels.RawMatrix().Cols != 2 ||
+		set.Test.Data.RawMatrix().Cols != 1 ||
+		set.Test.Labels.RawMatrix().Cols != 1 {
 		t.Errorf("Didn't expect this split: %v", set)
 	}
 }

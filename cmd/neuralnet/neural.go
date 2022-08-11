@@ -20,14 +20,14 @@ import (
 //
 // you can read the complete dataset and then later convert it into splitSet with splitDataSet()
 type Set struct {
-	data   mat.Dense
-	labels mat.Dense
+	Data   mat.Dense
+	Labels mat.Dense
 }
 
 // saves train and test data into struct
 type SplitSet struct {
-	train Set
-	test  Set
+	Train Set
+	Test  Set
 }
 
 // converts data vectors into a matrix
@@ -120,47 +120,47 @@ func (set *Set) splitDataSet(splitRatio float64) (SplitSet, error) {
 	}
 
 	// shuffle data and labels
-	for i := 0; i < set.data.RawMatrix().Cols; i++ {
+	for i := 0; i < set.Data.RawMatrix().Cols; i++ {
 		j := rand.Intn(i + 1)
 
 		// swap data
-		cache := mat.Col(nil, i, &set.data)
-		set.data.SetCol(i, mat.Col(nil, j, &set.data))
-		set.data.SetCol(j, cache)
+		cache := mat.Col(nil, i, &set.Data)
+		set.Data.SetCol(i, mat.Col(nil, j, &set.Data))
+		set.Data.SetCol(j, cache)
 
 		// swap labels
-		cache = mat.Col(nil, i, &set.labels)
-		set.labels.SetCol(i, mat.Col(nil, j, &set.labels))
-		set.labels.SetCol(j, cache)
+		cache = mat.Col(nil, i, &set.Labels)
+		set.Labels.SetCol(i, mat.Col(nil, j, &set.Labels))
+		set.Labels.SetCol(j, cache)
 	}
 
 	// take len(data)*splitRatio percent of the last elements as test data
-	splitIndex := set.data.RawMatrix().Cols - int(math.Ceil(float64(set.data.RawMatrix().Cols)*splitRatio))
-	trainData := mat.NewDense(set.data.RawMatrix().Rows,
+	splitIndex := set.Data.RawMatrix().Cols - int(math.Ceil(float64(set.Data.RawMatrix().Cols)*splitRatio))
+	trainData := mat.NewDense(set.Data.RawMatrix().Rows,
 		splitIndex,
 		nil,
 	)
-	trainLabels := mat.NewDense(set.labels.RawMatrix().Rows,
+	trainLabels := mat.NewDense(set.Labels.RawMatrix().Rows,
 		splitIndex,
 		nil,
 	)
-	testData := mat.NewDense(set.data.RawMatrix().Rows,
-		int(math.Ceil(float64(set.data.RawMatrix().Cols)*splitRatio)),
+	testData := mat.NewDense(set.Data.RawMatrix().Rows,
+		int(math.Ceil(float64(set.Data.RawMatrix().Cols)*splitRatio)),
 		nil,
 	)
-	testLabels := mat.NewDense(set.labels.RawMatrix().Rows,
-		int(math.Ceil(float64(set.data.RawMatrix().Cols)*splitRatio)),
+	testLabels := mat.NewDense(set.Labels.RawMatrix().Rows,
+		int(math.Ceil(float64(set.Data.RawMatrix().Cols)*splitRatio)),
 		nil,
 	)
 
 	for i := 0; i < splitIndex; i++ {
-		trainData.SetCol(i, mat.Col(nil, i, &set.data))
-		trainLabels.SetCol(i, mat.Col(nil, i, &set.labels))
+		trainData.SetCol(i, mat.Col(nil, i, &set.Data))
+		trainLabels.SetCol(i, mat.Col(nil, i, &set.Labels))
 	}
 
-	for i := splitIndex; i < set.data.RawMatrix().Cols; i++ {
-		testData.SetCol(i-splitIndex, mat.Col(nil, i, &set.data))
-		testLabels.SetCol(i-splitIndex, mat.Col(nil, i, &set.labels))
+	for i := splitIndex; i < set.Data.RawMatrix().Cols; i++ {
+		testData.SetCol(i-splitIndex, mat.Col(nil, i, &set.Data))
+		testLabels.SetCol(i-splitIndex, mat.Col(nil, i, &set.Labels))
 	}
 
 	splitSet = SplitSet{Set{*trainData, *trainLabels}, Set{*testData, *testLabels}}
@@ -213,16 +213,16 @@ func (dense *Network) predict(input mat.VecDense) mat.VecDense {
 func (dense *Network) train(train *Set, epochs int, learningRate float64) error {
 	for i := 0; i < epochs; i++ {
 		diff := 0.0
-		for j := 0; j < train.data.RawMatrix().Cols; j++ {
-			out := dense.predict(GetColVector(&train.data, j))
+		for j := 0; j < train.Data.RawMatrix().Cols; j++ {
+			out := dense.predict(GetColVector(&train.Data, j))
 
-			cache, err := dense.loss(GetColVector(&train.labels, j), out)
+			cache, err := dense.loss(GetColVector(&train.Labels, j), out)
 			if err != nil {
 				return err
 			}
 			diff += cache
 
-			grad, err := dense.lossDerivative(GetColVector(&train.labels, j), out)
+			grad, err := dense.lossDerivative(GetColVector(&train.Labels, j), out)
 			if err != nil {
 				return err
 			}
@@ -231,7 +231,7 @@ func (dense *Network) train(train *Set, epochs int, learningRate float64) error 
 				grad = dense.layers[len(dense.layers)-1-k].backward(grad, learningRate)
 			}
 		}
-		diff /= float64(train.data.RawMatrix().Cols)
+		diff /= float64(train.Data.RawMatrix().Cols)
 		fmt.Printf("Epoch = %v, Error = %v", i, diff)
 	}
 	return nil
@@ -239,16 +239,16 @@ func (dense *Network) train(train *Set, epochs int, learningRate float64) error 
 
 func (dense *Network) evaluate(test *Set) (float64, error) {
 	diff := 0.0
-	for i := 0; i < test.data.RawMatrix().Cols; i++ {
-		out := dense.predict(GetColVector(&test.data, i))
+	for i := 0; i < test.Data.RawMatrix().Cols; i++ {
+		out := dense.predict(GetColVector(&test.Data, i))
 
-		cache, err := dense.loss(GetColVector(&test.labels, i), out)
+		cache, err := dense.loss(GetColVector(&test.Labels, i), out)
 		if err != nil {
 			return 0.0, err
 		}
 		diff += cache
 	}
 
-	diff /= float64(test.data.RawMatrix().Cols)
+	diff /= float64(test.Data.RawMatrix().Cols)
 	return diff, nil
 }
