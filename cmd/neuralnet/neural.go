@@ -220,6 +220,18 @@ func (dense *Network) train(train *Set, epochs int, learningRate float64) {
 	}
 }
 
-func (dense *Network) evaluate(dataSet *SplitSet) float64 {
-	return 0.0
+func (dense *Network) evaluate(test *Set) float64 {
+	diff := 0.0
+	for i := 0; i < test.data.RawMatrix().Cols; i++ {
+		out := dense.predict(GetColVector(&test.data, i))
+
+		cache, err := dense.loss(GetColVector(&test.labels, i), out)
+		if err != nil {
+			log.Fatal(err)
+		}
+		diff += cache
+	}
+
+	diff /= float64(test.data.RawMatrix().Cols)
+	return diff
 }
