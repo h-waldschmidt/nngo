@@ -68,7 +68,7 @@ func TestBackwardNormal(t *testing.T) {
 	output := dense.backward(*input, 1)
 
 	rows, cols := output.Dims()
-	if rows != 2 || cols != 4 {
+	if rows != 4 || cols != 1 {
 		t.Error("Weights matrix doesn't have expected dimensions")
 	}
 }
