@@ -103,7 +103,7 @@ func (d *Dense) forward(input mat.VecDense) mat.VecDense {
 
 // backward propagation by using gradient descent
 // nice explanation can be found here: https://www.youtube.com/watch?v=Ilg3gGewQ5U
-func (d *Dense) backward(outputGradient mat.VecDense, learningRate float64) mat.Dense {
+func (d *Dense) backward(outputGradient mat.VecDense, learningRate float64) mat.VecDense {
 	var err error
 	// update activation layer
 	cache := activationVector(d.base.output, d.activationDerivative)
@@ -124,10 +124,9 @@ func (d *Dense) backward(outputGradient mat.VecDense, learningRate float64) mat.
 	cacheOutputGradient.ScaleVec(learningRate, &cacheOutputGradient)
 	d.bias.SubVec(&d.bias, &cacheOutputGradient)
 
-	// type assertion needed since T() returns mat.Matrix not mat.Dense
-	var empty mat.Dense
-	empty.Mul(weightsTranspose.T(), &outputGradient)
-	return weightsTranspose
+	var empty mat.VecDense
+	empty.MulVec(weightsTranspose.T(), &outputGradient)
+	return empty
 }
 
 func componentWise(a, b *mat.VecDense) (mat.VecDense, error) {
