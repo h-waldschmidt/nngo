@@ -2,6 +2,7 @@ package neural
 
 import (
 	"fmt"
+	"log"
 	"math"
 	"math/rand"
 
@@ -193,7 +194,31 @@ func (dense *Network) predict(input mat.VecDense) mat.VecDense {
 	return prediction
 }
 
-func (dense *Network) train(trainData mat.Dense, epochs int) {}
+func (dense *Network) train(train *Set, epochs int, learningRate float64) {
+	for i := 0; i < epochs; i++ {
+		diff := 0.0
+		for j := 0; j < train.data.RawMatrix().Cols; j++ {
+			out := dense.predict(GetColVector(&train.data, j))
+
+			cache, err := dense.loss(GetColVector(&train.labels, j), out)
+			if err != nil {
+				log.Fatal(err)
+			}
+			diff += cache
+
+			grad, err := dense.lossDerivative(GetColVector(&train.labels, j), out)
+			if err != nil {
+				log.Fatal(err)
+			}
+
+			for k := range dense.layers {
+				grad = dense.layers[len(dense.layers)-1-k].backward(grad, learningRate)
+			}
+		}
+		diff /= float64(train.data.RawMatrix().Cols)
+		fmt.Printf("Epoch = %v, Error = %v", i, diff)
+	}
+}
 
 func (dense *Network) evaluate(dataSet *SplitSet) float64 {
 	return 0.0
