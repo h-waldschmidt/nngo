@@ -2,7 +2,6 @@ package neural
 
 import (
 	"fmt"
-	"log"
 	"math"
 	"math/rand"
 
@@ -180,8 +179,8 @@ type Network struct {
 // create a neural network
 // each layer is specified by a subslice
 // e.g. {4, 5, 0} specifies a layer with 4 input, 5 output neurons and Sigmoid as a activation function
-func NewNetwork(layerSpecs [][]int, lossSpecs int) *Network {
-	return nil
+func NewNetwork(layerSpecs [][]int, lossSpecs int) (*Network, error) {
+	return nil, nil
 }
 
 func (dense *Network) predict(input mat.VecDense) mat.VecDense {
@@ -194,7 +193,7 @@ func (dense *Network) predict(input mat.VecDense) mat.VecDense {
 	return prediction
 }
 
-func (dense *Network) train(train *Set, epochs int, learningRate float64) {
+func (dense *Network) train(train *Set, epochs int, learningRate float64) error {
 	for i := 0; i < epochs; i++ {
 		diff := 0.0
 		for j := 0; j < train.data.RawMatrix().Cols; j++ {
@@ -202,13 +201,13 @@ func (dense *Network) train(train *Set, epochs int, learningRate float64) {
 
 			cache, err := dense.loss(GetColVector(&train.labels, j), out)
 			if err != nil {
-				log.Fatal(err)
+				return err
 			}
 			diff += cache
 
 			grad, err := dense.lossDerivative(GetColVector(&train.labels, j), out)
 			if err != nil {
-				log.Fatal(err)
+				return err
 			}
 
 			for k := range dense.layers {
@@ -218,20 +217,21 @@ func (dense *Network) train(train *Set, epochs int, learningRate float64) {
 		diff /= float64(train.data.RawMatrix().Cols)
 		fmt.Printf("Epoch = %v, Error = %v", i, diff)
 	}
+	return nil
 }
 
-func (dense *Network) evaluate(test *Set) float64 {
+func (dense *Network) evaluate(test *Set) (float64, error) {
 	diff := 0.0
 	for i := 0; i < test.data.RawMatrix().Cols; i++ {
 		out := dense.predict(GetColVector(&test.data, i))
 
 		cache, err := dense.loss(GetColVector(&test.labels, i), out)
 		if err != nil {
-			log.Fatal(err)
+			return 0.0, err
 		}
 		diff += cache
 	}
 
 	diff /= float64(test.data.RawMatrix().Cols)
-	return diff
+	return diff, nil
 }
