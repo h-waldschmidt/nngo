@@ -180,7 +180,24 @@ type Network struct {
 // each layer is specified by a subslice
 // e.g. {4, 5, 0} specifies a layer with 4 input, 5 output neurons and Sigmoid as a activation function
 func NewNetwork(layerSpecs [][]int, lossSpecs int) (*Network, error) {
-	return nil, nil
+	layers := make([]Dense, len(layerSpecs))
+	for i, tuple := range layerSpecs {
+		if len(tuple) != 3 {
+			return nil, fmt.Errorf("unexpected layer tuple: %v", tuple)
+		}
+		var err error
+		cache, err := NewDense(tuple[0], tuple[1], tuple[2])
+		if err != nil {
+			return nil, err
+		}
+		layers[i] = *cache
+	}
+	funcs, err := getLossTuple(lossSpecs)
+	if err != nil {
+		return nil, err
+	}
+	network := Network{layers, funcs.loss, funcs.lossDerivative}
+	return &network, nil
 }
 
 func (dense *Network) predict(input mat.VecDense) mat.VecDense {
