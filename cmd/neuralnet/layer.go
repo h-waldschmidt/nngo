@@ -23,11 +23,13 @@ type Base struct {
 
 // applies the given activation function on each element of the vector
 func activationVector(vector mat.VecDense, activation activationFunc) mat.VecDense {
-	for i := 0; i < vector.Len(); i++ {
-		vector.SetVec(i, activation(vector.AtVec(i)))
+	ans := mat.NewVecDense(vector.Len(), nil)
+	ans.CopyVec(&vector)
+	for i := 0; i < ans.Len(); i++ {
+		ans.SetVec(i, activation(ans.AtVec(i)))
 	}
 
-	return vector
+	return *ans
 }
 
 // Dense layer consists of a base layer with a weight matrix, bias vector and
@@ -92,8 +94,9 @@ func (d *Dense) forward(input mat.VecDense) mat.VecDense {
 	ans.MulVec(&d.weights, &input)
 	ans.AddVec(&ans, &d.bias)
 
-	ansCache := ans
-	d.base.output = ansCache
+	ansCache := mat.NewVecDense(ans.Len(), nil)
+	ansCache.CopyVec(&ans)
+	d.base.output = *ansCache
 
 	// apply activation function / activaation layer
 	cache := activationVector(ans, d.activation)
@@ -113,20 +116,28 @@ func (d *Dense) backward(outputGradient mat.VecDense, learningRate float64) mat.
 	}
 
 	var weightsGradient mat.Dense
-	transpose := &d.base.input
+	transpose := mat.NewDense(d.base.input.Len(), 1, nil)
+	transpose.Copy(&d.base.input)
 	weightsGradient.Mul(&outputGradient, transpose.T())
 
-	weightsTranspose := d.weights
+	weightsTranspose := mat.NewDense(
+		d.weights.RawMatrix().Rows,
+		d.weights.RawMatrix().Cols,
+		nil,
+	)
+	weightsTranspose.Copy(&d.weights)
+	var inputGradient mat.VecDense
+	inputGradient.MulVec(weightsTranspose.T(), &outputGradient)
+
 	weightsGradient.Scale(learningRate, &weightsGradient)
 	d.weights.Sub(&d.weights, &weightsGradient)
 
-	cacheOutputGradient := outputGradient
-	cacheOutputGradient.ScaleVec(learningRate, &cacheOutputGradient)
-	d.bias.SubVec(&d.bias, &cacheOutputGradient)
+	cacheOutputGradient := mat.NewVecDense(outputGradient.Len(), nil)
+	cacheOutputGradient.CopyVec(&outputGradient)
+	cacheOutputGradient.ScaleVec(learningRate, cacheOutputGradient)
+	d.bias.SubVec(&d.bias, cacheOutputGradient)
 
-	var empty mat.VecDense
-	empty.MulVec(weightsTranspose.T(), &outputGradient)
-	return empty
+	return inputGradient
 }
 
 func componentWise(a, b *mat.VecDense) (mat.VecDense, error) {
