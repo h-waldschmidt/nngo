@@ -201,21 +201,17 @@ func NewNetwork(layerSpecs [][]int, lossSpecs int) (*Network, error) {
 }
 
 func (dense *Network) predict(input mat.VecDense) mat.VecDense {
-	var prediction mat.VecDense
-
 	for _, layer := range dense.layers {
-		prediction = layer.forward(input)
-		input = prediction
+		input = layer.forward(input)
 	}
-	return prediction
+	return input
 }
 
-func (dense *Network) train(train *Set, epochs int, learningRate float64) error {
+func (dense *Network) Train(train *Set, epochs int, learningRate float64) error {
 	for i := 0; i < epochs; i++ {
 		diff := 0.0
-		for j := 0; j < train.Data.RawMatrix().Cols; j++ {
+		for j := 0; j < train.Data.RawMatrix().Cols; j += 100 {
 			out := dense.predict(GetColVector(&train.Data, j))
-
 			cache, err := dense.loss(GetColVector(&train.Labels, j), out)
 			if err != nil {
 				return err
@@ -228,27 +224,32 @@ func (dense *Network) train(train *Set, epochs int, learningRate float64) error 
 			}
 
 			for k := range dense.layers {
-				grad = dense.layers[len(dense.layers)-1-k].backward(grad, learningRate)
+				grad = dense.layers[len(dense.layers)-1-k].backward(grad, learningRate/float64(i+1))
 			}
 		}
 		diff /= float64(train.Data.RawMatrix().Cols)
-		fmt.Printf("Epoch = %v, Error = %v", i, diff)
+		diff *= 100
+		fmt.Printf("Epoch = %v, Error = %v \n", i+1, diff)
 	}
 	return nil
 }
 
-func (dense *Network) evaluate(test *Set) (float64, error) {
+// this evaluate function only works for one hot encoded input
+func (dense *Network) EvaluateOneHot(test *Set) float64 {
 	diff := 0.0
 	for i := 0; i < test.Data.RawMatrix().Cols; i++ {
-		out := dense.predict(GetColVector(&test.Data, i))
+		input := GetColVector(&test.Data, i)
+		predicted := dense.predict(input)
 
-		cache, err := dense.loss(GetColVector(&test.Labels, i), out)
-		if err != nil {
-			return 0.0, err
+		predictedIndex := GetMaxIndex(&predicted)
+		expectedOutput := GetColVector(&test.Labels, i)
+		realIndex := GetMaxIndex(&expectedOutput)
+
+		if predictedIndex == realIndex {
+			diff++
 		}
-		diff += cache
 	}
 
 	diff /= float64(test.Data.RawMatrix().Cols)
-	return diff, nil
+	return diff
 }
