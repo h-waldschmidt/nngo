@@ -59,9 +59,10 @@ func MseDerivative(yTrue, yPred mat.VecDense) (mat.VecDense, error) {
 		return ans, fmt.Errorf("vectors need to have the same dimensions")
 	}
 
-	yTrue.SubVec(&yPred, &yTrue)
-	yTrue.ScaleVec(2, &yTrue)
-	return yTrue, nil
+	ans.SubVec(&yPred, &yTrue)
+	ans.ScaleVec(2, &ans)
+	ans.ScaleVec(float64(1/float64(yTrue.Len())), &ans)
+	return ans, nil
 }
 
 func Mae(yTrue, yPred mat.VecDense) (float64, error) {
