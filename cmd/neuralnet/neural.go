@@ -210,7 +210,7 @@ func (dense *Network) predict(input mat.VecDense) mat.VecDense {
 func (dense *Network) Train(train *Set, epochs int, learningRate float64) error {
 	for i := 0; i < epochs; i++ {
 		diff := 0.0
-		for j := 0; j < train.Data.RawMatrix().Cols; j += 100 {
+		for j := 0; j < train.Data.RawMatrix().Cols; j++ {
 			out := dense.predict(GetColVector(&train.Data, j))
 			cache, err := dense.loss(GetColVector(&train.Labels, j), out)
 			if err != nil {
@@ -228,7 +228,6 @@ func (dense *Network) Train(train *Set, epochs int, learningRate float64) error 
 			}
 		}
 		diff /= float64(train.Data.RawMatrix().Cols)
-		diff *= 100
 		fmt.Printf("Epoch = %v, Error = %v \n", i+1, diff)
 	}
 	return nil
