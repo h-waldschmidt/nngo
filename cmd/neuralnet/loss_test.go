@@ -1,11 +1,96 @@
 package neural
 
 import (
+	"math/rand"
 	"testing"
 
 	"github.com/google/go-cmp/cmp"
 	"gonum.org/v1/gonum/mat"
 )
+
+func TestGetLossTuple(t *testing.T) {
+	t.Run("MSE", func(t *testing.T) {
+		tuple, err := getLossTuple(0)
+		if err != nil {
+			t.Errorf("Didn't expect error. Got: %v", err)
+		}
+
+		// create vector
+		vecOne := mat.NewVecDense(3, nil)
+		vecTwo := mat.NewVecDense(3, nil)
+		for i := 0; i < 3; i++ {
+			vecOne.SetVec(i, rand.Float64())
+			vecTwo.SetVec(i, rand.Float64())
+		}
+
+		expected, err := Mse(*vecOne, *vecTwo)
+		if err != nil {
+			t.Error("Didn't expect error")
+		}
+		ans, err := tuple.loss(*vecOne, *vecTwo)
+		if err != nil {
+			t.Error("Didn't expect error")
+		}
+
+		if !cmp.Equal(expected, ans) {
+			t.Errorf("Expected: %v, Got: %v", expected, ans)
+		}
+
+		expectedVec, err := MseDerivative(*vecOne, *vecTwo)
+		if err != nil {
+			t.Error("Didn't expect error")
+		}
+		ansVec, err := tuple.lossDerivative(*vecOne, *vecTwo)
+		if err != nil {
+			t.Error("Didn't expect error")
+		}
+
+		if !cmp.Equal(expectedVec, ansVec, cmp.AllowUnexported(mat.VecDense{}, Set{})) {
+			t.Errorf("Expected: %v, Got: %v", expectedVec, ansVec)
+		}
+	})
+
+	t.Run("MAE", func(t *testing.T) {
+		tuple, err := getLossTuple(1)
+		if err != nil {
+			t.Errorf("Didn't expect error. Got: %v", err)
+		}
+
+		// create vector
+		vecOne := mat.NewVecDense(3, nil)
+		vecTwo := mat.NewVecDense(3, nil)
+		for i := 0; i < 3; i++ {
+			vecOne.SetVec(i, rand.Float64())
+			vecTwo.SetVec(i, rand.Float64())
+		}
+
+		expected, err := Mae(*vecOne, *vecTwo)
+		if err != nil {
+			t.Error("Didn't expect error")
+		}
+		ans, err := tuple.loss(*vecOne, *vecTwo)
+		if err != nil {
+			t.Error("Didn't expect error")
+		}
+
+		if !cmp.Equal(expected, ans) {
+			t.Errorf("Expected: %v, Got: %v", expected, ans)
+		}
+
+		expectedVec, err := MaeDerivative(*vecOne, *vecTwo)
+		if err != nil {
+			t.Error("Didn't expect error")
+		}
+		ansVec, err := tuple.lossDerivative(*vecOne, *vecTwo)
+		if err != nil {
+			t.Error("Didn't expect error")
+		}
+
+		if !cmp.Equal(expectedVec, ansVec, cmp.AllowUnexported(mat.VecDense{}, Set{})) {
+			t.Errorf("Expected: %v, Got: %v", expectedVec, ansVec)
+		}
+	})
+}
 
 func TestMSENormal(t *testing.T) {
 	a := mat.NewVecDense(4, []float64{1, 2, 3, 4})
