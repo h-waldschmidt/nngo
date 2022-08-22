@@ -1,9 +1,67 @@
-package neuralnet
+package neural
 
 import (
 	"math"
+	"math/rand"
 	"testing"
 )
+
+func TestGetActivationTuple(t *testing.T) {
+	t.Run("Sigmoid", func(t *testing.T) {
+		tuple, err := getActivationTuple(0)
+		if err != nil {
+			t.Errorf("Didn't expect error. Got: %v", err)
+		}
+
+		r := rand.Float64()
+		if Sigmoid(r) != tuple.activation(r) {
+			t.Errorf("Expected: %v, Got: %v", Sigmoid(r), tuple.activation(r))
+		}
+
+		if SigmoidDerivative(r) != tuple.activationDerivative(r) {
+			t.Errorf("Expected: %v, Got: %v", SigmoidDerivative(r), tuple.activationDerivative(r))
+		}
+	})
+
+	t.Run("Relu", func(t *testing.T) {
+		tuple, err := getActivationTuple(1)
+		if err != nil {
+			t.Errorf("Didn't expect error. Got: %v", err)
+		}
+
+		r := rand.Float64()
+		if Relu(r) != tuple.activation(r) {
+			t.Errorf("Expected: %v, Got: %v", Relu(r), tuple.activation(r))
+		}
+
+		if ReluDerivative(r) != tuple.activationDerivative(r) {
+			t.Errorf("Expected: %v, Got: %v", ReluDerivative(r), tuple.activationDerivative(r))
+		}
+	})
+
+	t.Run("Tanh", func(t *testing.T) {
+		tuple, err := getActivationTuple(2)
+		if err != nil {
+			t.Errorf("Didn't expect error. Got: %v", err)
+		}
+
+		r := rand.Float64()
+		if Tanh(r) != tuple.activation(r) {
+			t.Errorf("Expected: %v, Got: %v", Tanh(r), tuple.activation(r))
+		}
+
+		if TanhDerivative(r) != tuple.activationDerivative(r) {
+			t.Errorf("Expected: %v, Got: %v", TanhDerivative(r), tuple.activationDerivative(r))
+		}
+	})
+}
+
+func TestGetActivationTupleError(t *testing.T) {
+	_, err := getActivationTuple(100)
+	if err == nil {
+		t.Error("Expected error.")
+	}
+}
 
 func TestSigmoid(t *testing.T) {
 	t.Run("Normal", func(t *testing.T) {

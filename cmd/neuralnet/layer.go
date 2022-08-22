@@ -1,4 +1,4 @@
-package neuralnet
+package neural
 
 import (
 	"fmt"
@@ -21,16 +21,15 @@ type Base struct {
 	output mat.VecDense
 }
 
-// activationFunc is a function that takes a float as input and has float as output
-type activationFunc func(float64) float64
-
 // applies the given activation function on each element of the vector
 func activationVector(vector mat.VecDense, activation activationFunc) mat.VecDense {
-	for i := 0; i < vector.Len(); i++ {
-		vector.SetVec(i, activation(vector.AtVec(i)))
+	ans := mat.NewVecDense(vector.Len(), nil)
+	ans.CopyVec(&vector)
+	for i := 0; i < ans.Len(); i++ {
+		ans.SetVec(i, activation(ans.AtVec(i)))
 	}
 
-	return vector
+	return *ans
 }
 
 // Dense layer consists of a base layer with a weight matrix, bias vector and
@@ -46,14 +45,19 @@ type Dense struct {
 // constructor for DenseLayer
 // creates a new dense layer with random values for the vectors and matrices with the given data
 // inputSize and outputSize need to be positive
-func NewDense(inputSize, outputSize int, activation, activationDerivative activationFunc) (*Dense, error) {
+func NewDense(inputSize, outputSize, activationSpecs int) (*Dense, error) {
 	if inputSize <= 0 || outputSize <= 0 {
 		return nil, fmt.Errorf("inputSize and outputSize must be greater than 0")
 	}
 
+	funcTuple, err := getActivationTuple(activationSpecs)
+	if err != nil {
+		return nil, err
+	}
+
 	var dense Dense
-	dense.activation = activation
-	dense.activationDerivative = activationDerivative
+	dense.activation = funcTuple.activation
+	dense.activationDerivative = funcTuple.activationDerivative
 
 	input := mat.NewVecDense(inputSize, make([]float64, inputSize))
 
@@ -90,8 +94,9 @@ func (d *Dense) forward(input mat.VecDense) mat.VecDense {
 	ans.MulVec(&d.weights, &input)
 	ans.AddVec(&ans, &d.bias)
 
-	ansCache := ans
-	d.base.output = ansCache
+	ansCache := mat.NewVecDense(ans.Len(), nil)
+	ansCache.CopyVec(&ans)
+	d.base.output = *ansCache
 
 	// apply activation function / activaation layer
 	cache := activationVector(ans, d.activation)
@@ -101,39 +106,46 @@ func (d *Dense) forward(input mat.VecDense) mat.VecDense {
 
 // backward propagation by using gradient descent
 // nice explanation can be found here: https://www.youtube.com/watch?v=Ilg3gGewQ5U
-func (d *Dense) backward(outputGradient mat.VecDense, learningRate float64) mat.Dense {
+func (d *Dense) backward(outputGradient mat.VecDense, learningRate float64) mat.VecDense {
 	var err error
 	// update activation layer
 	cache := activationVector(d.base.output, d.activationDerivative)
-	outputGradient, err = componentWise(&outputGradient, &cache)
+	outputGradient, err = componentWise(outputGradient, cache)
 	if err != nil {
 		log.Fatal(err)
 	}
 
 	var weightsGradient mat.Dense
-	transpose := &d.base.input
+	transpose := mat.NewDense(d.base.input.Len(), 1, nil)
+	transpose.Copy(&d.base.input)
 	weightsGradient.Mul(&outputGradient, transpose.T())
 
-	weightsTranspose := d.weights
+	weightsTranspose := mat.NewDense(
+		d.weights.RawMatrix().Rows,
+		d.weights.RawMatrix().Cols,
+		nil,
+	)
+	weightsTranspose.Copy(&d.weights)
+	var inputGradient mat.VecDense
+	inputGradient.MulVec(weightsTranspose.T(), &outputGradient)
+
 	weightsGradient.Scale(learningRate, &weightsGradient)
 	d.weights.Sub(&d.weights, &weightsGradient)
 
-	cacheOutputGradient := outputGradient
-	cacheOutputGradient.ScaleVec(learningRate, &cacheOutputGradient)
-	d.bias.SubVec(&d.bias, &cacheOutputGradient)
+	cacheOutputGradient := mat.NewVecDense(outputGradient.Len(), nil)
+	cacheOutputGradient.CopyVec(&outputGradient)
+	cacheOutputGradient.ScaleVec(learningRate, cacheOutputGradient)
+	d.bias.SubVec(&d.bias, cacheOutputGradient)
 
-	// type assertion needed since T() returns mat.Matrix not mat.Dense
-	var empty mat.Dense
-	empty.Mul(weightsTranspose.T(), &outputGradient)
-	return weightsTranspose
+	return inputGradient
 }
 
-func componentWise(a, b *mat.VecDense) (mat.VecDense, error) {
+func componentWise(a, b mat.VecDense) (mat.VecDense, error) {
 	var ans mat.VecDense
 	if a.Len() != b.Len() {
 		return ans, fmt.Errorf("vectors need to have the same length")
 	}
-	ans = *a
+	ans = a
 	for i := 0; i < a.Len(); i++ {
 		ans.SetVec(i, a.AtVec(i)*b.AtVec(i))
 	}
