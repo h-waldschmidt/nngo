@@ -18,7 +18,7 @@ func TestGetColVectorNormal(t *testing.T) {
 	t.Run("firsVector", func(t *testing.T) {
 		expected := *mat.NewVecDense(4, []float64{1, 1, -4, 0})
 
-		ans := GetColVector(dense, 0)
+		ans := GetColVector(*dense, 0)
 		if !cmp.Equal(expected, ans, cmp.AllowUnexported(mat.VecDense{})) {
 			t.Errorf("Expected: %v, Got: %v", expected, ans)
 		}
@@ -27,7 +27,7 @@ func TestGetColVectorNormal(t *testing.T) {
 	t.Run("secondVector", func(t *testing.T) {
 		expected := *mat.NewVecDense(4, []float64{0, -2, 0, 0})
 
-		ans := GetColVector(dense, 1)
+		ans := GetColVector(*dense, 1)
 		if !cmp.Equal(expected, ans, cmp.AllowUnexported(mat.VecDense{})) {
 			t.Errorf("Expected: %v, Got: %v", expected, ans)
 		}
@@ -36,7 +36,7 @@ func TestGetColVectorNormal(t *testing.T) {
 	t.Run("thirdVector", func(t *testing.T) {
 		expected := *mat.NewVecDense(4, []float64{0, 3, 0, 0})
 
-		ans := GetColVector(dense, 2)
+		ans := GetColVector(*dense, 2)
 		if !cmp.Equal(expected, ans, cmp.AllowUnexported(mat.VecDense{})) {
 			t.Errorf("Expected: %v, Got: %v", expected, ans)
 		}

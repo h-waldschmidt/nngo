@@ -211,14 +211,14 @@ func (dense *Network) Train(train *Set, epochs int, learningRate float64) error 
 	for i := 0; i < epochs; i++ {
 		diff := 0.0
 		for j := 0; j < train.Data.RawMatrix().Cols; j++ {
-			out := dense.predict(GetColVector(&train.Data, j))
-			cache, err := dense.loss(GetColVector(&train.Labels, j), out)
+			out := dense.predict(GetColVector(train.Data, j))
+			cache, err := dense.loss(GetColVector(train.Labels, j), out)
 			if err != nil {
 				return err
 			}
 			diff += cache
 
-			grad, err := dense.lossDerivative(GetColVector(&train.Labels, j), out)
+			grad, err := dense.lossDerivative(GetColVector(train.Labels, j), out)
 			if err != nil {
 				return err
 			}
@@ -237,12 +237,12 @@ func (dense *Network) Train(train *Set, epochs int, learningRate float64) error 
 func (dense *Network) EvaluateOneHot(test *Set) float64 {
 	diff := 0.0
 	for i := 0; i < test.Data.RawMatrix().Cols; i++ {
-		input := GetColVector(&test.Data, i)
+		input := GetColVector(test.Data, i)
 		predicted := dense.predict(input)
 
-		predictedIndex := GetMaxIndex(&predicted)
-		expectedOutput := GetColVector(&test.Labels, i)
-		realIndex := GetMaxIndex(&expectedOutput)
+		predictedIndex := GetMaxIndex(predicted)
+		expectedOutput := GetColVector(test.Labels, i)
+		realIndex := GetMaxIndex(expectedOutput)
 
 		if predictedIndex == realIndex {
 			diff++
