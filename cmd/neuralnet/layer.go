@@ -110,7 +110,7 @@ func (d *Dense) backward(outputGradient mat.VecDense, learningRate float64) mat.
 	var err error
 	// update activation layer
 	cache := activationVector(d.base.output, d.activationDerivative)
-	outputGradient, err = componentWise(&outputGradient, &cache)
+	outputGradient, err = componentWise(outputGradient, cache)
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -140,12 +140,12 @@ func (d *Dense) backward(outputGradient mat.VecDense, learningRate float64) mat.
 	return inputGradient
 }
 
-func componentWise(a, b *mat.VecDense) (mat.VecDense, error) {
+func componentWise(a, b mat.VecDense) (mat.VecDense, error) {
 	var ans mat.VecDense
 	if a.Len() != b.Len() {
 		return ans, fmt.Errorf("vectors need to have the same length")
 	}
-	ans = *a
+	ans = a
 	for i := 0; i < a.Len(); i++ {
 		ans.SetVec(i, a.AtVec(i)*b.AtVec(i))
 	}
