@@ -1,4 +1,4 @@
-package neural
+package nngo
 
 import (
 	"testing"
