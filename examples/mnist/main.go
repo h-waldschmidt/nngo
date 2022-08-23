@@ -4,10 +4,10 @@ import (
 	"encoding/csv"
 	"fmt"
 	"log"
-	neural "nngo/cmd/neuralnet"
 	"os"
 	"strconv"
 
+	"github.com/h-waldschmidt/nngo/nngo"
 	"gonum.org/v1/gonum/mat"
 )
 
@@ -17,9 +17,9 @@ func main() {
 	// examples/mnist/
 	train := readCSVToSet("mnist_train.csv")
 	test := readCSVToSet("mnist_test.csv")
-	splitSet := neural.SplitSet{Train: train, Test: test}
+	splitSet := nngo.SplitSet{Train: train, Test: test}
 
-	network, err := neural.NewNetwork(
+	network, err := nngo.NewNetwork(
 		[][]int{{28 * 28, 40, 2}, {40, 10, 2}},
 		0,
 	)
@@ -33,7 +33,7 @@ func main() {
 	fmt.Printf("Accuracy on test data: %v", accuracy)
 }
 
-func readCSVToSet(filePath string) neural.Set {
+func readCSVToSet(filePath string) nngo.Set {
 	f, err := os.Open(filePath)
 	if err != nil {
 		log.Fatal("Unable to read input file "+filePath, err)
@@ -64,5 +64,5 @@ func readCSVToSet(filePath string) neural.Set {
 			}
 		}
 	}
-	return neural.Set{Data: *data, Labels: *labels}
+	return nngo.Set{Data: *data, Labels: *labels}
 }
