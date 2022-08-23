@@ -200,7 +200,7 @@ func NewNetwork(layerSpecs [][]int, lossSpecs int) (*Network, error) {
 	return &network, nil
 }
 
-func (dense *Network) predict(input mat.VecDense) mat.VecDense {
+func (dense *Network) Predict(input mat.VecDense) mat.VecDense {
 	for _, layer := range dense.layers {
 		input = layer.forward(input)
 	}
@@ -211,7 +211,7 @@ func (dense *Network) Train(train *Set, epochs int, learningRate float64) error 
 	for i := 0; i < epochs; i++ {
 		diff := 0.0
 		for j := 0; j < train.Data.RawMatrix().Cols; j++ {
-			out := dense.predict(GetColVector(train.Data, j))
+			out := dense.Predict(GetColVector(train.Data, j))
 			cache, err := dense.loss(GetColVector(train.Labels, j), out)
 			if err != nil {
 				return err
@@ -238,7 +238,7 @@ func (dense *Network) EvaluateOneHot(test *Set) float64 {
 	diff := 0.0
 	for i := 0; i < test.Data.RawMatrix().Cols; i++ {
 		input := GetColVector(test.Data, i)
-		predicted := dense.predict(input)
+		predicted := dense.Predict(input)
 
 		predictedIndex := GetMaxIndex(predicted)
 		expectedOutput := GetColVector(test.Labels, i)
