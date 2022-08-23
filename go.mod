@@ -1,4 +1,4 @@
-module nngo
+module github.com/h-waldschmidt/nngo
 
 go 1.19
 
