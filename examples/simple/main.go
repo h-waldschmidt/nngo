@@ -16,8 +16,8 @@ func main() {
 	testLabels := mat.NewDense(2, 4, []float64{0, 0, 1, 1, 0, 1, 0, 1})
 
 	splitSet := nngo.SplitSet{
-		Test:  nngo.Set{*trainData, *trainLabels},
-		Train: nngo.Set{*testData, *testLabels},
+		Test:  nngo.Set{Data: *trainData, Labels: *trainLabels},
+		Train: nngo.Set{Data: *testData, Labels: *testLabels},
 	}
 
 	// create the network
@@ -33,7 +33,7 @@ func main() {
 	}
 
 	// train the network with 1000 epochs
-	network.Train(&splitSet.Train, 1000, 0.1)
+	network.Train(&splitSet.Train, 100, 0.1)
 
 	// evaluate the performance of the network
 	accuracy := network.EvaluateOneHot(&splitSet.Test)

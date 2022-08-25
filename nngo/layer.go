@@ -115,11 +115,7 @@ func (d *Dense) backward(outputGradient mat.VecDense, learningRate float64) mat.
 		log.Fatal(err)
 	}
 
-	var weightsGradient mat.Dense
-	transpose := mat.NewDense(d.base.input.Len(), 1, nil)
-	transpose.Copy(&d.base.input)
-	weightsGradient.Mul(&outputGradient, transpose.T())
-
+	// calculate the outputGradient for the next layer
 	weightsTranspose := mat.NewDense(
 		d.weights.RawMatrix().Rows,
 		d.weights.RawMatrix().Cols,
@@ -129,9 +125,15 @@ func (d *Dense) backward(outputGradient mat.VecDense, learningRate float64) mat.
 	var inputGradient mat.VecDense
 	inputGradient.MulVec(weightsTranspose.T(), &outputGradient)
 
+	// update weights
+	var weightsGradient mat.Dense
+	transpose := mat.NewDense(d.base.input.Len(), 1, nil)
+	transpose.Copy(&d.base.input)
+	weightsGradient.Mul(&outputGradient, transpose.T())
 	weightsGradient.Scale(learningRate, &weightsGradient)
 	d.weights.Sub(&d.weights, &weightsGradient)
 
+	// update bias
 	cacheOutputGradient := mat.NewVecDense(outputGradient.Len(), nil)
 	cacheOutputGradient.CopyVec(&outputGradient)
 	cacheOutputGradient.ScaleVec(learningRate, cacheOutputGradient)
