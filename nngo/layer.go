@@ -12,7 +12,7 @@ import (
 // a layer needs an forward and backward propagation method
 type Layer interface {
 	forward(input mat.VecDense) mat.VecDense
-	backward(outputGradient mat.VecDense, learningRate float64) mat.Dense
+	backward(outputGradient mat.VecDense, learningRate float64) mat.VecDense
 }
 
 // basic layer which consists of input and output vector
@@ -35,29 +35,19 @@ func activationVector(vector mat.VecDense, activation activationFunc) mat.VecDen
 // Dense layer consists of a base layer with a weight matrix, bias vector and
 // an activation function with its derivative
 type Dense struct {
-	base                 Base
-	weights              mat.Dense
-	bias                 mat.VecDense
-	activation           activationFunc
-	activationDerivative activationFunc
+	base    Base
+	weights mat.Dense
+	bias    mat.VecDense
 }
 
 // constructor for DenseLayer
 // creates a new dense layer with random values for the vectors and matrices with the given data
 // inputSize and outputSize need to be positive
-func NewDense(inputSize, outputSize, activationSpecs int) (*Dense, error) {
+func NewDense(inputSize, outputSize int) (*Dense, error) {
 	if inputSize <= 0 || outputSize <= 0 {
 		return nil, fmt.Errorf("inputSize and outputSize must be greater than 0")
 	}
-
-	funcTuple, err := getActivationTuple(activationSpecs)
-	if err != nil {
-		return nil, err
-	}
-
 	var dense Dense
-	dense.activation = funcTuple.activation
-	dense.activationDerivative = funcTuple.activationDerivative
 
 	input := mat.NewVecDense(inputSize, make([]float64, inputSize))
 
@@ -93,28 +83,12 @@ func (d *Dense) forward(input mat.VecDense) mat.VecDense {
 	var ans mat.VecDense
 	ans.MulVec(&d.weights, &input)
 	ans.AddVec(&ans, &d.bias)
-
-	ansCache := mat.NewVecDense(ans.Len(), nil)
-	ansCache.CopyVec(&ans)
-	d.base.output = *ansCache
-
-	// apply activation function / activaation layer
-	cache := activationVector(ans, d.activation)
-	ans = cache
 	return ans
 }
 
 // backward propagation by using gradient descent
 // nice explanation can be found here: https://www.youtube.com/watch?v=Ilg3gGewQ5U
 func (d *Dense) backward(outputGradient mat.VecDense, learningRate float64) mat.VecDense {
-	var err error
-	// update activation layer
-	cache := activationVector(d.base.output, d.activationDerivative)
-	outputGradient, err = componentWise(outputGradient, cache)
-	if err != nil {
-		log.Fatal(err)
-	}
-
 	// calculate the outputGradient for the next layer
 	weightsTranspose := mat.NewDense(
 		d.weights.RawMatrix().Rows,
@@ -134,12 +108,58 @@ func (d *Dense) backward(outputGradient mat.VecDense, learningRate float64) mat.
 	d.weights.Sub(&d.weights, &weightsGradient)
 
 	// update bias
-	cacheOutputGradient := mat.NewVecDense(outputGradient.Len(), nil)
-	cacheOutputGradient.CopyVec(&outputGradient)
-	cacheOutputGradient.ScaleVec(learningRate, cacheOutputGradient)
-	d.bias.SubVec(&d.bias, cacheOutputGradient)
+	outputGradient.ScaleVec(learningRate, &outputGradient)
+	d.bias.SubVec(&d.bias, &outputGradient)
 
 	return inputGradient
+}
+
+type Activation struct {
+	base                 Base
+	activation           activationFunc
+	activationDerivative activationFunc
+}
+
+func NewActivation(size, activationSpecs int) (*Activation, error) {
+	if size <= 0 {
+		return nil, fmt.Errorf("inputSize and outputSize must be greater than 0")
+	}
+
+	funcTuple, err := getActivationTuple(activationSpecs)
+	if err != nil {
+		return nil, err
+	}
+
+	var activation Activation
+	activation.activation = funcTuple.activation
+	activation.activationDerivative = funcTuple.activationDerivative
+
+	input := mat.NewVecDense(size, make([]float64, size))
+	output := mat.NewVecDense(size, make([]float64, size))
+
+	for i := 0; i < size; i++ {
+		input.SetVec(i, rand.NormFloat64())
+		output.SetVec(i, rand.NormFloat64())
+	}
+
+	activation.base.input = *input
+	activation.base.output = *output
+
+	return &activation, nil
+}
+
+func (act *Activation) forward(input mat.VecDense) mat.VecDense {
+	act.base.input = input
+	return activationVector(input, act.activation)
+}
+
+func (act *Activation) backward(outputGradient mat.VecDense, learningRate float64) mat.VecDense {
+	cache := activationVector(act.base.input, act.activationDerivative)
+	outputGradient, err := componentWise(outputGradient, cache)
+	if err != nil {
+		log.Fatal(err)
+	}
+	return outputGradient
 }
 
 func componentWise(a, b mat.VecDense) (mat.VecDense, error) {

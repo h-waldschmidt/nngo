@@ -7,7 +7,7 @@ import (
 )
 
 func TestNewDenseNormal(t *testing.T) {
-	dense, err := NewDense(4, 2, 0)
+	dense, err := NewDense(4, 2)
 
 	if err != nil {
 		t.Errorf("Didn't expect this error: %v", err)
@@ -15,10 +15,6 @@ func TestNewDenseNormal(t *testing.T) {
 
 	if dense.base.input.Len() != 4 || dense.base.output.Len() != 2 {
 		t.Error("Input and output have not expected dimensions")
-	}
-
-	if dense.activation == nil || dense.activationDerivative == nil {
-		t.Error("Expected activation function and derivative to be not nil")
 	}
 
 	if dense.bias.Len() != 2 {
@@ -33,14 +29,14 @@ func TestNewDenseNormal(t *testing.T) {
 }
 
 func TestNewDenseError(t *testing.T) {
-	dense, err := NewDense(-1, 2, 0)
+	dense, err := NewDense(-1, 2)
 	if dense != nil || err == nil {
 		t.Error("There should be an error")
 	}
 }
 
 func TestForwardNormal(t *testing.T) {
-	dense, err := NewDense(4, 2, 0)
+	dense, err := NewDense(4, 2)
 
 	if err != nil {
 		t.Errorf("Didn't expect this error: %v", err)
@@ -51,14 +47,10 @@ func TestForwardNormal(t *testing.T) {
 	if output.Len() != 2 {
 		t.Error("Input and output have not expected dimensions")
 	}
-
-	if output.AtVec(0) <= 0 || output.AtVec(0) > 1 || output.AtVec(1) <= 0 || output.AtVec(1) > 1 {
-		t.Error("Didn't expect this kind of output")
-	}
 }
 
 func TestBackwardNormal(t *testing.T) {
-	dense, err := NewDense(4, 2, 0)
+	dense, err := NewDense(4, 2)
 
 	if err != nil {
 		t.Errorf("Didn't expect this error: %v", err)
