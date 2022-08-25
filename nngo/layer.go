@@ -9,6 +9,7 @@ import (
 )
 
 // default methods that have to be implemented by each layer
+//
 // a layer needs an forward and backward propagation method
 type Layer interface {
 	forward(input mat.VecDense) mat.VecDense
@@ -21,8 +22,7 @@ type Base struct {
 	output mat.VecDense
 }
 
-// Dense layer consists of a base layer with a weight matrix, bias vector and
-// an activation function with its derivative
+// Dense layer consists of a base layer with a weight matrix, bias vector
 type Dense struct {
 	base    Base
 	weights mat.Dense
@@ -30,7 +30,9 @@ type Dense struct {
 }
 
 // constructor for DenseLayer
+//
 // creates a new dense layer with random values for the vectors and matrices with the given data
+//
 // inputSize and outputSize need to be positive
 func NewDense(inputSize, outputSize int) (*Dense, error) {
 	if inputSize <= 0 || outputSize <= 0 {
@@ -66,7 +68,8 @@ func NewDense(inputSize, outputSize int) (*Dense, error) {
 }
 
 // forward propagation with the following formula:
-// ans = activationFunc(weights * input + bias)
+//
+// ans = weights * input + bias
 func (d *Dense) forward(input mat.VecDense) mat.VecDense {
 	d.base.input = input
 	var ans mat.VecDense
@@ -76,6 +79,7 @@ func (d *Dense) forward(input mat.VecDense) mat.VecDense {
 }
 
 // backward propagation by using gradient descent
+//
 // nice explanation can be found here: https://www.youtube.com/watch?v=Ilg3gGewQ5U
 func (d *Dense) backward(outputGradient mat.VecDense, learningRate float64) mat.VecDense {
 	// calculate the outputGradient for the next layer
@@ -103,12 +107,19 @@ func (d *Dense) backward(outputGradient mat.VecDense, learningRate float64) mat.
 	return inputGradient
 }
 
+// consists of a base layer and an activation function
+// this layer just applies the activation function to the output of a dense layer
 type Activation struct {
 	base                 Base
 	activation           activationFunc
 	activationDerivative activationFunc
 }
 
+// constructor for Activation layer
+//
+// creates a new activation layer with random values for the input and output with the given data
+//
+// inputSize and outputSize need to be positive
 func NewActivation(size, activationSpecs int) (*Activation, error) {
 	if size <= 0 {
 		return nil, fmt.Errorf("inputSize and outputSize must be greater than 0")
@@ -137,11 +148,13 @@ func NewActivation(size, activationSpecs int) (*Activation, error) {
 	return &activation, nil
 }
 
+// just applies the activation function to the input
 func (act *Activation) forward(input mat.VecDense) mat.VecDense {
 	act.base.input = input
 	return activationVector(input, act.activation)
 }
 
+// applies the activation derivative to the input and returns it
 func (act *Activation) backward(outputGradient mat.VecDense, learningRate float64) mat.VecDense {
 	cache := activationVector(act.base.input, act.activationDerivative)
 	outputGradient, err := componentWise(outputGradient, cache)
@@ -162,6 +175,7 @@ func activationVector(vector mat.VecDense, activation activationFunc) mat.VecDen
 	return *ans
 }
 
+// multiply each component with the corresponding component of the other vector
 func componentWise(a, b mat.VecDense) (mat.VecDense, error) {
 	var ans mat.VecDense
 	if a.Len() != b.Len() {
