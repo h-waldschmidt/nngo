@@ -21,17 +21,6 @@ type Base struct {
 	output mat.VecDense
 }
 
-// applies the given activation function on each element of the vector
-func activationVector(vector mat.VecDense, activation activationFunc) mat.VecDense {
-	ans := mat.NewVecDense(vector.Len(), nil)
-	ans.CopyVec(&vector)
-	for i := 0; i < ans.Len(); i++ {
-		ans.SetVec(i, activation(ans.AtVec(i)))
-	}
-
-	return *ans
-}
-
 // Dense layer consists of a base layer with a weight matrix, bias vector and
 // an activation function with its derivative
 type Dense struct {
@@ -160,6 +149,17 @@ func (act *Activation) backward(outputGradient mat.VecDense, learningRate float6
 		log.Fatal(err)
 	}
 	return outputGradient
+}
+
+// applies the given activation function on each element of the vector
+func activationVector(vector mat.VecDense, activation activationFunc) mat.VecDense {
+	ans := mat.NewVecDense(vector.Len(), nil)
+	ans.CopyVec(&vector)
+	for i := 0; i < ans.Len(); i++ {
+		ans.SetVec(i, activation(ans.AtVec(i)))
+	}
+
+	return *ans
 }
 
 func componentWise(a, b mat.VecDense) (mat.VecDense, error) {
