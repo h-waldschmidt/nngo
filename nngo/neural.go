@@ -171,7 +171,7 @@ func (set *Set) splitDataSet(splitRatio float64) (SplitSet, error) {
 // layers are saved inside a slice
 // this structure allows for almost every possible neural network configuration
 type Network struct {
-	layers         []Dense
+	layers         []Layer
 	loss           lossFunc
 	lossDerivative lossFuncDerivative
 }
@@ -180,17 +180,23 @@ type Network struct {
 // each layer is specified by a subslice
 // e.g. {4, 5, 0} specifies a layer with 4 input, 5 output neurons and Sigmoid as a activation function
 func NewNetwork(layerSpecs [][]int, lossSpecs int) (*Network, error) {
-	layers := make([]Dense, len(layerSpecs))
+	layers := make([]Layer, len(layerSpecs)*2)
 	for i, tuple := range layerSpecs {
 		if len(tuple) != 3 {
 			return nil, fmt.Errorf("unexpected layer tuple: %v", tuple)
 		}
-		var err error
-		cache, err := NewDense(tuple[0], tuple[1], tuple[2])
+
+		dense, err := NewDense(tuple[0], tuple[1])
 		if err != nil {
 			return nil, err
 		}
-		layers[i] = *cache
+		layers[2*i] = dense
+
+		activation, err := NewActivation(tuple[1], tuple[2])
+		if err != nil {
+			return nil, err
+		}
+		layers[2*i+1] = activation
 	}
 	funcs, err := getLossTuple(lossSpecs)
 	if err != nil {
@@ -224,7 +230,7 @@ func (dense *Network) Train(train *Set, epochs int, learningRate float64) error 
 			}
 
 			for k := range dense.layers {
-				grad = dense.layers[len(dense.layers)-1-k].backward(grad, learningRate/float64(i+1))
+				grad = dense.layers[len(dense.layers)-1-k].backward(grad, learningRate)
 			}
 		}
 		diff /= float64(train.Data.RawMatrix().Cols)
